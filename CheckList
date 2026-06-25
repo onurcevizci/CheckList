@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gelişmiş Checklist & Kategori Notları</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%);
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --primary: #4a6fa5;
+            --primary-hover: #3b5984;
+            --success-bg: #e8f6f0;
+            --success-border: #a3e2c9;
+            --success-text: #2e7d32;
+            --danger: #e63946;
+            --danger-hover: #cb2d3e;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 750px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e293b;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Kontrol Panelleri */
+        .panel {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        input, select, button {
+            font-family: inherit;
+            font-size: 15px;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15);
+        }
+
+        input { flex: 1; }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        button:hover { background-color: var(--primary-hover); }
+
+        /* Grup Kartları */
+        .group-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary);
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .group-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .delete-group-btn {
+            background-color: transparent;
+            color: #94a3b8;
+            padding: 6px 12px;
+            font-size: 13px;
+            border: 1px solid #e2e8f0;
+        }
+        .delete-group-btn:hover {
+            background-color: #fff1f2;
+            color: var(--danger);
+            border-color: #fecdd3;
+        }
+
+        /* Liste Tasarımı */
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Satırın Genel Yapısı */
+        .todo-row {
+            display: flex;
+            align-items: center;
+            gap: 12px; /* Kutunun dışındaki silme butonuyla arasındaki boşluk */
+            margin-bottom: 10px;
+        }
+
+        /* İçerik Kutusu */
+        .todo-box {
+            flex: 1;
+            display: flex;
+            justify-content: space-between; /* Yazı solda, tik sağda */
+            align-items: center; /* Dikeyde tam ortalama */
+            padding: 14px 20px;
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .todo-box:hover {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .todo-text {
+            font-weight: 500;
+            color: #334155;
+            padding-right: 15px;
+            word-break: break-word;
+        }
+
+        /* Tik Kutusu (Sağda ve Ortalanmış) */
+        .todo-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            background-color: white;
+            display: inline-grid;
+            place-content: center;
+            cursor: pointer;
+            margin: 0; /* Tarayıcı boşluklarını sıfırla */
+            flex-shrink: 0; /* Çözünürlük daralsa da kutu küçülmesin */
+            transition: all 0.2s ease;
+        }
+
+        .todo-checkbox::before {
+            content: "✓";
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            transform: scale(0);
+            transition: transform 0.1s ease-in-out;
+        }
+
+        /* Tiklenince Değişecek Renkler */
+        .todo-row.completed .todo-box {
+            background-color: var(--success-bg);
+            border-color: var(--success-border);
+        }
+
+        .todo-row.completed .todo-text {
+            text-decoration: line-through;
+            color: var(--success-text);
+            opacity: 0.7;
+        }
+
+        .todo-row.completed .todo-checkbox {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        .todo-row.completed .todo-checkbox::before {
+            transform: scale(1);
+        }
+
+        /* Kutunun Dışındaki Silme Butonu */
+        .delete-todo-btn {
+            background-color: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-todo-btn:hover {
+            background-color: #fff1f2;
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📋 Not Defteri & Kategori Checklist</h1>
+
+    <!-- GRUP OLUŞTURMA ALANI -->
+    <div class="panel">
+        <input type="text" id="new-group-input" placeholder="Yeni grup adı (Örn: İş, Yazılım, Alışveriş)...">
+        <button onclick="addGroup()">Grup Oluştur</button>
+    </div>
+
+    <!-- GÖREV EKLEME ALANI -->
+    <div class="panel">
+        <input type="text" id="new-todo-input" placeholder="Yapılacak bir şey yazın...">
+        <select id="todo-group-select"></select>
+        <button onclick="addTodo()">Ekle</button>
+    </div>
+
+    <!-- LİSTELEME ALANI -->
+    <div id="groups-container"></div>
+</div>
+
+<script>
+    // LocalStorage tabanlı veritabanı yapısı
+    let appData = JSON.parse(localStorage.getItem('checklistData-v2')) || {
+        groups: ["İş", "Kişisel"],
+        todos: []
+    };
+
+    renderApp();
+
+    function addGroup() {
+        const groupInput = document.getElementById('new-group-input');
+        const groupName = groupInput.value.trim();
+        
+        if (groupName && !appData.groups.includes(groupName)) {
+            appData.groups.push(groupName);
+            groupInput.value = '';
+            saveData();
+            renderApp();
+        }
+    }
+
+    function deleteGroup(groupName) {
+        if(confirm(`"${groupName}" grubunu ve içindeki tüm maddeleri silmek istiyor musunuz?`)) {
+            appData.groups = appData.groups.filter(g => g !== groupName);
+            appData.todos = appData.todos.filter(t => t.group !== groupName);
+            saveData();
+            renderApp();
+        }
+    }
+
+    function addTodo() {
+        const todoInput = document.getElementById('new-todo-input');
+        const groupSelect = document.getElementById('todo-group-select');
+        
+        const text = todoInput.value.trim();
+        const group = groupSelect.value;
+
+        if (!text) return;
+        if (!group) {
+            alert("Lütfen önce bir grup oluşturun!");
+            return;
+        }
+
+        const newTodo = {
+            id: Date.now(),
+            text: text,
+            group: group,
+            completed: false
+        };
+
+        appData.todos.push(newTodo);
+        todoInput.value = '';
+        saveData();
+        renderApp();
+    }
+
+    function toggleTodo(id) {
+        const todo = appData.todos.find(t => t.id === id);
+        if (todo) {
+            todo.completed = !todo.completed;
+            saveData();
+            renderApp();
+        }
+    }
+
+    function deleteTodo(id) {
+        appData.todos = appData.todos.filter(t => t.id !== id);
+        saveData();
+        renderApp();
+    }
+
+    function saveData() {
+        localStorage.setItem('checklistData-v2', JSON.stringify(appData));
+    }
+
+    function renderApp() {
+        const groupSelect = document.getElementById('todo-group-select');
+        const groupsContainer = document.getElementById('groups-container');
+        
+        groupSelect.innerHTML = appData.groups.map(g => `<option value="${g}">${g}</option>`).join('');
+
+        if (appData.groups.length === 0) {
+            groupsContainer.innerHTML = '<p style="text-align:center; color:#fff; font-weight: 500;">Henüz grup yok. Yukarıdan yeni grup ekleyin.</p>';
+            return;
+        }
+
+        groupsContainer.innerHTML = appData.groups.map(group => {
+            const groupTodos = appData.todos.filter(t => t.group === group);
+            
+            const todosHTML = groupTodos.map(todo => `
+                <li class="todo-row ${todo.completed ? 'completed' : ''}">
+                    <!-- Tıklanabilir İçerik Kutusu -->
+                    <div class="todo-box" onclick="toggleTodo(${todo.id})">
+                        <span class="todo-text">${todo.text}</span>
+                        <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleTodo(${todo.id})">
+                    </div>
+                    <!-- Kutunun Tamamen Dışındaki Silme Butonu -->
+                    <button class="delete-todo-btn" onclick="deleteTodo(${todo.id})" title="Sil">🗑️</button>
+                </li>
+            `).join('');
+
+            return `
+                <div class="group-card">
+                    <div class="group-header">
+                        <h3 class="group-title">${group}</h3>
+                        <button class="delete-group-btn" onclick="deleteGroup('${group}')">Grubu Sil</button>
+                    </div>
+                    <ul class="todo-list">
+                        ${todosHTML ? todosHTML : '<li style="color:#94a3b8; font-style:italic; font-size:14px; padding: 10px 0;">Bu grup henüz boş...</li>'}
+                    </ul>
+                </div>
+            `;
+        }).join('');
+    }
+</script>
+
+</body>
+</html>
